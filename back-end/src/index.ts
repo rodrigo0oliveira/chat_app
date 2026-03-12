@@ -4,6 +4,11 @@ import express from 'express';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth/index.js';
 import userRoutes from './routes/user/index.js';
+import { WebSocketServer } from 'ws';
+import { v4 as uuidv4 } from 'uuid';
+import { StompHandler } from './websocket/StompHandler.js';
+import roomRoutes from './routes/room.js';
+import messageRoutes from './routes/message.js';
 
 dotenv.config();
 
@@ -20,6 +25,8 @@ app.get('/test', (_req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
+app.use('/rooms', roomRoutes);
+app.use('/messages', messageRoutes);
 
 const startServer = async (): Promise<void> => {
   if (!mongoUri) {
@@ -27,8 +34,18 @@ const startServer = async (): Promise<void> => {
   }
 
   await mongoose.connect(mongoUri);
-  app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Server running on port ${port}`);
+  });
+
+  // Attach WebSocket server sharing the same underlying HTTP server
+  const wss = new WebSocketServer({ server });
+  
+  wss.on('connection', (ws) => {
+    const connectionId = uuidv4();
+    console.log(`[WS] New connection established: ${connectionId}`);
+    // Hand over control to StompHandler
+    new StompHandler(ws, connectionId);
   });
 };
 
