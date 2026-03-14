@@ -91,7 +91,7 @@ export class RoomService {
       id: room._id.toString(),
       name: room.name,
       type: room.type,
-      createdBy: room.createdBy ? room.createdBy.toString() : undefined,
+      createdBy: room.createdBy ? room.createdBy.toString() : "",
       createdAt: room.createdAt,
       members: members.map((m: any) => ({
         userId: m.userId._id.toString(),
@@ -118,5 +118,18 @@ export class RoomService {
     }
 
     return responseRooms;
+  }
+
+  static async getPublicRooms(): Promise<RoomResponseDto[]> {
+    var rooms = await Room.find({ type: 'PUBLIC' });
+
+    return rooms.map(room => ({
+      id: room._id.toString(),
+      name: room.name,
+      type: room.type,
+      createdBy: room.createdBy ? room.createdBy.toString() : "",
+      createdAt: room.createdAt,
+      members: [] 
+    }))
   }
 }

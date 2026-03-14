@@ -17,7 +17,7 @@ export interface CreateMessageDto {
 export interface RoomResponseDto {
   id: string;
   name: string | null;
-  type: 'DIRECT' | 'GROUP';
+  type: 'DIRECT' | 'GROUP' | 'PUBLIC';
   createdBy?: string;
   createdAt: Date;
   members: {

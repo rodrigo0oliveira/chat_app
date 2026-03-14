@@ -4,9 +4,10 @@ import { RoomController } from '../controllers/chat/RoomController.js';
 
 const router = Router();
 
-router.use(authenticateToken); // protect all room routes
+router.use(authenticateToken); 
 
 router.get('/', RoomController.getUserRooms);
+router.get('/public', RoomController.getPublicRooms);
 router.post('/direct', RoomController.createDirectRoom);
 router.post('/group', RoomController.createGroupRoom);
 

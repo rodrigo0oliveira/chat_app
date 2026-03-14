@@ -82,7 +82,8 @@ export class StompHandler {
     const { headers } = frame;
     
     // Auth logic via STOMP headers (e.g. login/passcode or authorization header)
-    const token = headers['passcode'] || headers['authorization']?.split(' ')[1];
+    const token = headers['passcode'] || headers['authorization']
+    console.log("Extracted token from headers:", token);
 
     if (!token) {
       throw new Error('Authentication token required');
@@ -98,7 +99,6 @@ export class StompHandler {
       this.userId = decoded.id;
       this.isAuthenticated = true;
 
-      // Reply with CONNECTED
       this.ws.send(StompParser.createConnectedFrame('1.2'));
       console.log(`[STOMP] Connection ${this.connectionId} authenticated as User ${this.userId}`);
 
@@ -111,9 +111,10 @@ export class StompHandler {
   private async handleSubscribe(frame: StompFrame): Promise<void> {
     const { headers } = frame;
     const destination = headers['destination'];
-    const id = headers['id']; // subscription id from client
+    const id = headers['id']; 
+    const type = headers['type'] || 'PRIVATE'; 
 
-    if (!destination || !id) {
+    if (!destination || !id) { 
       throw new Error('SUBSCRIBE requires destination and id headers');
     }
 
@@ -121,9 +122,10 @@ export class StompHandler {
     if (destination.startsWith('/topic/rooms.')) {
         const roomId = destination.split('.')[1];
         
+        
         // Authorize: ensure user is part of the room
         const isMember = await RoomMember.exists({ userId: this.userId, roomId });
-        if (!isMember) {
+        if (!isMember && type !== 'PUBLIC') {
           throw new Error('Unauthorized: You are not a member of this room');
         }
 

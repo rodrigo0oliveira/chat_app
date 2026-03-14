@@ -14,12 +14,6 @@ export class MessageService {
     clientMessageId?: string
   ): Promise<MessageResponseDto> {
     
-    // Ensure the sender is actually a member of the room
-    const isMember = await RoomMember.findOne({ userId: senderId, roomId: dto.roomId });
-    if (!isMember) {
-      throw new Error('User is not a member of this room.');
-    }
-
     const messageId = clientMessageId || uuidv4();
 
     let message;

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IRoom extends Document {
   name: string;
-  type: 'DIRECT' | 'GROUP';
+  type: 'DIRECT' | 'GROUP' | 'PUBLIC';
   directChatId?: string;
   createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -20,7 +20,7 @@ const RoomSchema = new Schema<IRoom>(
     },
     type: {
       type: String,
-      enum: ['DIRECT', 'GROUP'],
+      enum: ['DIRECT', 'GROUP','PUBLIC'],
       required: true,
     },
     directChatId: {

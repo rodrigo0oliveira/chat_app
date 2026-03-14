@@ -24,10 +24,11 @@
     <span id="status">Disconnected</span>
   </div>
 
-  <div class="box" id="panelSub" style="display:none;">
-    <h3>2. Subscribe to Room</h3>
-    <input type="text" id="roomId" placeholder="Room ID..." style="width: 250px;">
-    <button onclick="subscribeRoom()">Subscribe</button>
+  <div class="box">
+    <h1>Public Chats Room</h1>
+    <ol id="list-public-rooms">
+
+    </ol>
   </div>
 
   <div class="box" id="panelSend" style="display:none;">
@@ -48,6 +49,7 @@
 
     function connect() {
       const token = document.getElementById('token').value;
+
       if (!token) return alert('Please enter a JWT token');
 
       // The STOMP broker URL (ws:// instead of http://)
@@ -66,13 +68,15 @@
         heartbeatOutgoing: 0
       });
 
-      stompClient.onConnect = function (frame) {
+      stompClient.onConnect = async function (frame) {
+        localStorage.setItem('token', token);
         document.getElementById('status').innerText = 'Connected';
         document.getElementById('status').style.color = 'green';
         document.getElementById('btnDisconnect').disabled = false;
-        document.getElementById('panelSub').style.display = 'block';
-        document.getElementById('panelSend').style.display = 'block';
-        console.log('Connected: ' + frame);
+        // document.getElementById('panelSub').style.display = 'block';
+        // document.getElementById('panelSend').style.display = 'block';
+        await getPublicRooms();
+        // console.log('Connected: ' + frame);
       };
 
       stompClient.onStompError = function (frame) {
@@ -96,7 +100,7 @@
       console.log("Disconnected");
     }
 
-    function subscribeRoom() {
+    function subscribeRoom(type) {
       const roomId = document.getElementById('roomId').value;
       if (!roomId) return alert('Enter Room ID to subscribe');
 
@@ -107,6 +111,8 @@
       const destination = `/topic/rooms.${roomId}`;
       currentSubscription = stompClient.subscribe(destination, function (message) {
         showReceivedMessage(message.body);
+      },{
+        type:'PUBLIC'
       });
       console.log(`Subscribed to ${destination}`);
       
@@ -150,6 +156,39 @@
       
       ul.prepend(li); // add to top
     }
+
+    async function getPublicRooms() {
+      const token = localStorage.getItem('token') ?? document.getElementById('token').value;
+      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      await fetch('/rooms/public', {
+        headers: {
+          'Authorization': authHeader
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('list-public-rooms');
+          list.innerHTML = '';
+          data.forEach(room => {
+            const li = document.createElement('li');
+            const btn = document.createElement('button');
+            btn.innerText = room.name;
+            btn.onclick = () => joinRoom(room.id);
+            li.appendChild(btn);
+            list.appendChild(li);
+          });
+        })
+        .catch(err => console.error('Error fetching public rooms:', err));
+    }
+
+    function joinRoom(roomId) {
+      document.getElementById('roomId').value = roomId;
+      document.getElementById('destinationRoomId').value = roomId;
+      document.getElementById('panelSub').style.display = 'block';
+      document.getElementById('panelSend').style.display = 'block';
+      subscribeRoom();
+    }
+
   </script>
 </body>
 </html>
