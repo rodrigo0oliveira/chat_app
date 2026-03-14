@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Message from '../../models/Message.js';
 import RoomMember from '../../models/RoomMember.js';
 import type { CreateMessageDto, MessageResponseDto } from '../../dtos/chat.dto.js';
@@ -42,6 +43,7 @@ export class MessageService {
       messageId: message.messageId,
       roomId: message.roomId.toString(),
       senderId: message.senderId.toString(),
+      senderUsername: '',
       content: message.content,
       createdAt: message.createdAt,
     };
@@ -65,13 +67,15 @@ export class MessageService {
     const messages = await Message.find(query)
       .sort({ createdAt: -1 })
       .limit(limit)
+      .populate<{ senderId: { _id: mongoose.Types.ObjectId; username: string } }>('senderId', 'username')
       .lean();
 
     return messages.reverse().map(m => ({
       id: m._id.toString(),
       messageId: m.messageId,
       roomId: m.roomId.toString(),
-      senderId: m.senderId.toString(),
+      senderId: m.senderId._id.toString(),
+      senderUsername: m.senderId.username,
       content: m.content,
       createdAt: m.createdAt,
     }));

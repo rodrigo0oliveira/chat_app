@@ -25,8 +25,15 @@
   </div>
 
   <div class="box">
-    <h1>Public Chats Room</h1>
+    <h1>Public Chats</h1>
     <ol id="list-public-rooms">
+
+    </ol>
+  </div>
+
+  <div class="box">
+    <h1>Private Chats</h1>
+    <ol id="list-private-rooms">
 
     </ol>
   </div>
@@ -38,157 +45,8 @@
     <button onclick="sendMessage()">Send</button>
   </div>
 
-  <div class="box">
-    <h3>Messages</h3>
-    <ul id="messages"></ul>
-  </div>
-
-  <script>
-    let stompClient = null;
-    let currentSubscription = null;
-
-    function connect() {
-      const token = document.getElementById('token').value;
-
-      if (!token) return alert('Please enter a JWT token');
-
-      // The STOMP broker URL (ws:// instead of http://)
-      const brokerURL = 'ws://localhost:3000';
-
-      stompClient = new StompJs.Client({
-        brokerURL: brokerURL,
-        connectHeaders: {
-          authorization: token
-        },
-        debug: function (str) {
-          console.log(str);
-        },
-        reconnectDelay: 0, // Disable auto reconnect for manual testing
-        heartbeatIncoming: 0,
-        heartbeatOutgoing: 0
-      });
-
-      stompClient.onConnect = async function (frame) {
-        localStorage.setItem('token', token);
-        document.getElementById('status').innerText = 'Connected';
-        document.getElementById('status').style.color = 'green';
-        document.getElementById('btnDisconnect').disabled = false;
-        // document.getElementById('panelSub').style.display = 'block';
-        // document.getElementById('panelSend').style.display = 'block';
-        await getPublicRooms();
-        // console.log('Connected: ' + frame);
-      };
-
-      stompClient.onStompError = function (frame) {
-        console.error('Broker reported error: ' + frame.headers['message']);
-        console.error('Additional details: ' + frame.body);
-        alert('Error: ' + frame.headers['message']);
-      };
-
-      stompClient.activate();
-    }
-
-    function disconnect() {
-      if (stompClient !== null) {
-        stompClient.deactivate();
-      }
-      document.getElementById('status').innerText = 'Disconnected';
-      document.getElementById('status').style.color = 'black';
-      document.getElementById('btnDisconnect').disabled = true;
-      document.getElementById('panelSub').style.display = 'none';
-      document.getElementById('panelSend').style.display = 'none';
-      console.log("Disconnected");
-    }
-
-    function subscribeRoom(type) {
-      const roomId = document.getElementById('roomId').value;
-      if (!roomId) return alert('Enter Room ID to subscribe');
-
-      if (currentSubscription) {
-        currentSubscription.unsubscribe();
-      }
-
-      const destination = `/topic/rooms.${roomId}`;
-      currentSubscription = stompClient.subscribe(destination, function (message) {
-        showReceivedMessage(message.body);
-      },{
-        type:'PUBLIC'
-      });
-      console.log(`Subscribed to ${destination}`);
-      
-      // Auto-fill destination room for convenience
-      document.getElementById('destinationRoomId').value = roomId;
-    }
-
-    function sendMessage() {
-      const roomId = document.getElementById('destinationRoomId').value;
-      const content = document.getElementById('messageContent').value;
-
-      if (!roomId || !content) return alert('Missing room or content');
-
-      const payload = {
-        roomId: roomId,
-        content: content
-      };
-
-      // Ensure idempotency for retries
-      const clientMessageId = crypto.randomUUID();
-
-      stompClient.publish({
-        destination: '/app/chat.sendMessage',
-        headers: { 'message-id': clientMessageId },
-        body: JSON.stringify(payload)
-      });
-      
-      document.getElementById('messageContent').value = '';
-    }
-
-    function showReceivedMessage(message) {
-      const ul = document.getElementById('messages');
-      const li = document.createElement('li');
-      
-      try {
-        const data = JSON.parse(message);
-        li.innerText = `[${new Date(data.createdAt).toLocaleTimeString()}] Sender ${data.senderId.substring(0,6)}...: ${data.content}`;
-      } catch (e) {
-        li.innerText = message;
-      }
-      
-      ul.prepend(li); // add to top
-    }
-
-    async function getPublicRooms() {
-      const token = localStorage.getItem('token') ?? document.getElementById('token').value;
-      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-      await fetch('/rooms/public', {
-        headers: {
-          'Authorization': authHeader
-        }
-      })
-        .then(res => res.json())
-        .then(data => {
-          const list = document.getElementById('list-public-rooms');
-          list.innerHTML = '';
-          data.forEach(room => {
-            const li = document.createElement('li');
-            const btn = document.createElement('button');
-            btn.innerText = room.name;
-            btn.onclick = () => joinRoom(room.id);
-            li.appendChild(btn);
-            list.appendChild(li);
-          });
-        })
-        .catch(err => console.error('Error fetching public rooms:', err));
-    }
-
-    function joinRoom(roomId) {
-      document.getElementById('roomId').value = roomId;
-      document.getElementById('destinationRoomId').value = roomId;
-      document.getElementById('panelSub').style.display = 'block';
-      document.getElementById('panelSend').style.display = 'block';
-      subscribeRoom();
-    }
-
-  </script>
+  <script src="./js/stomp.js"></script>
+  <script src="./js/rooms.js"></script>
+  <script src="./js/messages.js"></script>
 </body>
 </html>

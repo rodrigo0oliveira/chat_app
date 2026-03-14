@@ -32,6 +32,7 @@ export interface MessageResponseDto {
   messageId: string;
   roomId: string;
   senderId: string;
+  senderUsername: string;
   content: string;
   createdAt: Date;
 }

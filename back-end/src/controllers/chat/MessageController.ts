@@ -5,16 +5,8 @@ import RoomMember from '../../models/RoomMember.js';
 export class MessageController {
   static async getRoomMessages(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).userId;
       const { roomId } = req.params;
       const { limit, before } = req.query;
-
-      // Check access
-      const isMember = await RoomMember.exists({ userId, roomId });
-      if (!isMember) {
-        res.status(403).json({ message: 'Forbidden: not a member of this room' });
-        return;
-      }
 
       const numLimit = limit ? parseInt(limit as string, 10) : 50;
       const beforeStr = before as string | undefined;
