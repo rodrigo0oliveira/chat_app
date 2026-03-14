@@ -2,8 +2,8 @@ import { WebSocket } from 'ws';
 import jwt from 'jsonwebtoken';
 import { StompParser, StompFrame } from './stomp/StompParser.js';
 import { inMemoryBroker } from './broker/InMemoryBroker.js';
-import { MessageService } from '../../services/chat/MessageService.js';
-import RoomMember from '../../models/RoomMember.js';
+import { MessageService } from '../services/chat/MessageService.js';
+import RoomMember from '../models/RoomMember.js';
 
 export class StompHandler {
   private ws: WebSocket;

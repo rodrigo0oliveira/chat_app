@@ -20,7 +20,7 @@ export class MessageController {
       const beforeStr = before as string | undefined;
       const beforeDate = beforeStr ? new Date(beforeStr) : undefined;
 
-      const messages = await MessageService.getRoomMessages(roomId, numLimit, beforeDate);
+      const messages = await MessageService.getRoomMessages(roomId as string, numLimit, beforeDate);
       res.status(200).json(messages);
     } catch (error: any) {
       console.error(error);

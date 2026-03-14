@@ -1,4 +1,4 @@
-import { MessageBroker } from './MessageBroker.js';
+import type { MessageBroker } from './MessageBroker.js';
 
 type SubscriberCallback = (message: string) => void;
 

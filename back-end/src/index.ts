@@ -2,6 +2,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth/index.js';
 import userRoutes from './routes/user/index.js';
 import { WebSocketServer } from 'ws';
@@ -12,12 +14,16 @@ import messageRoutes from './routes/message.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
 const mongoUri = process.env.MONGO_URI ?? process.env.MONGODB_URI;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.get('/test', (_req, res) => {
   res.status(200).json({ status: 'ok' });

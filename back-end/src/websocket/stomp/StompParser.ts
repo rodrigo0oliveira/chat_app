@@ -1,4 +1,4 @@
-export interface StompFrame {
+export type StompFrame  = {
   command: string;
   headers: Record<string, string>;
   body: string;

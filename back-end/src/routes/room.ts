@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authenticateToken } from '../../middleware/auth.js';
-import { RoomController } from '../../controllers/chat/RoomController.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { RoomController } from '../controllers/chat/RoomController.js';
 
 const router = Router();
 
