@@ -44,7 +44,6 @@ const startServer = async (): Promise<void> => {
     console.log(`Server running on port ${port}`);
   });
 
-  // Attach WebSocket server sharing the same underlying HTTP server
   const wss = new WebSocketServer({ server });
   
   wss.on('connection', (ws) => {
