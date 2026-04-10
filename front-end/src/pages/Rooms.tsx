@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { LogOut, Hash, Search, Plus, User as UserIcon, Users, MessageSquare } from 'lucide-react';
-
+import { LogOut, Hash, Plus, User as UserIcon, Users, MessageSquare } from 'lucide-react';
 interface User {
   _id?: string;
   id?: string;
@@ -20,11 +19,11 @@ interface Room {
 export default function Rooms() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>([]);
-  
+
   const [publicRooms, setPublicRooms] = useState<Room[]>([]);
   const [myRooms, setMyRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [isDirectModalOpen, setDirectModalOpen] = useState(false);
   const [isGroupModalOpen, setGroupModalOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -69,11 +68,11 @@ export default function Rooms() {
   const joinRoom = (room: Room) => {
     let displayName = room.name;
     if (room.type === 'DIRECT') {
-       displayName = "Chat Direto";
-       if (room.members && currentUser) {
-           const otherMember = room.members.find((m: any) => m.userId !== currentUser.id && m.userId !== currentUser._id);
-           if (otherMember && otherMember.username) displayName = otherMember.username;
-       }
+      displayName = "Chat Direto";
+      if (room.members && currentUser) {
+        const otherMember = room.members.find((m: any) => m.userId !== currentUser.id && m.userId !== currentUser._id);
+        if (otherMember && otherMember.username) displayName = otherMember.username;
+      }
     }
     navigate(`/chat/${room.id}?name=${encodeURIComponent(displayName || 'Chat')}`);
   };
@@ -132,7 +131,7 @@ export default function Rooms() {
           <div className="panel-header">
             <h3>Salas Públicas</h3>
           </div>
-          
+
           <div className="rooms-list">
             {loading ? (
               <div className="loading-state"><span className="spinner"></span></div>
@@ -192,12 +191,12 @@ export default function Rooms() {
               <div className="empty-state">Nenhum chat privado ainda.</div>
             ) : (
               directRooms.map(room => {
-                 let otherName = "Chat Direto";
-                 if (room.members && currentUser) {
-                     const m = room.members.find((mx: any) => mx.userId !== currentUser.id && mx.userId !== currentUser._id);
-                     if (m && m.username) otherName = m.username;
-                 }
-                 return (
+                let otherName = "Chat Direto";
+                if (room.members && currentUser) {
+                  const m = room.members.find((mx: any) => mx.userId !== currentUser.id && mx.userId !== currentUser._id);
+                  if (m && m.username) otherName = m.username;
+                }
+                return (
                   <div key={room.id} className="room-card" onClick={() => joinRoom(room)}>
                     <div className="room-icon"><UserIcon size={24} /></div>
                     <div className="room-info">
@@ -215,17 +214,17 @@ export default function Rooms() {
       {isDirectModalOpen && (
         <div className="modal-backdrop" onClick={() => setDirectModalOpen(false)}>
           <div className="glass-panel modal-content" onClick={e => e.stopPropagation()}>
-            <h3 style={{marginBottom: '0.5rem'}}>Nova Mensagem Direta</h3>
-            <p style={{marginBottom: '1rem', color: 'var(--text-muted)'}}>Selecione um usuário para conversar</p>
+            <h3 style={{ marginBottom: '0.5rem' }}>Nova Mensagem Direta</h3>
+            <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>Selecione um usuário para conversar</p>
             <div className="user-list">
               {otherUsers.map(u => (
                 <div key={u._id} className="user-card" onClick={() => createDirectRoom(u._id!)}>
-                  <UserIcon size={20} style={{marginRight: '0.5rem'}}/> 
+                  <UserIcon size={20} style={{ marginRight: '0.5rem' }} />
                   <span>{u.username}</span>
                 </div>
               ))}
             </div>
-            <div style={{marginTop: '1rem', display: 'flex', justifyContent: 'flex-end'}}>
+            <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
               <button className="btn-secondary" onClick={() => setDirectModalOpen(false)}>Cancelar</button>
             </div>
           </div>
@@ -235,27 +234,27 @@ export default function Rooms() {
       {isGroupModalOpen && (
         <div className="modal-backdrop" onClick={() => setGroupModalOpen(false)}>
           <div className="glass-panel modal-content" onClick={e => e.stopPropagation()}>
-            <h3 style={{marginBottom: '1rem'}}>Novo Chat em Grupo</h3>
+            <h3 style={{ marginBottom: '1rem' }}>Novo Chat em Grupo</h3>
             <div className="input-group">
               <label>Nome do Grupo</label>
               <input type="text" value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="Ex. Equipe de Engenharia" />
             </div>
-            <p style={{margin: '0.5rem 0', color: 'var(--text-muted)'}}>Selecionar membros:</p>
+            <p style={{ margin: '0.5rem 0', color: 'var(--text-muted)' }}>Selecionar membros:</p>
             <div className="user-list">
               {otherUsers.map(u => {
                 const isSelected = selectedUsers.includes(u._id!);
                 return (
-                  <div key={u._id} className={`user-card ${isSelected ? 'selected' : ''}`} 
-                       onClick={() => setSelectedUsers(prev => isSelected ? prev.filter(id => id !== u._id) : [...prev, u._id!])}>
-                    <UserIcon size={20} style={{marginRight: '0.5rem'}}/> 
+                  <div key={u._id} className={`user-card ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setSelectedUsers(prev => isSelected ? prev.filter(id => id !== u._id) : [...prev, u._id!])}>
+                    <UserIcon size={20} style={{ marginRight: '0.5rem' }} />
                     <span>{u.username}</span>
                   </div>
                 )
               })}
             </div>
-            <div className="modal-actions" style={{display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem'}}>
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
               <button className="btn-secondary" onClick={() => setGroupModalOpen(false)}>Cancelar</button>
-              <button className="btn-primary" style={{width: 'auto'}} onClick={createGroupRoom}>Criar Grupo</button>
+              <button className="btn-primary" style={{ width: 'auto' }} onClick={createGroupRoom}>Criar Grupo</button>
             </div>
           </div>
         </div>
