@@ -23,7 +23,6 @@ const mongoUri = process.env.MONGO_URI ?? process.env.MONGODB_URI;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.get('/test', (_req, res) => {
   res.status(200).json({ status: 'ok' });
