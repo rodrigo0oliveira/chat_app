@@ -14,7 +14,7 @@ interface ChatMessage {
 export default function Chat() {
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
-  const roomName = searchParams.get('name') || 'Chat Room';
+  const roomName = searchParams.get('name') || 'Sala de Chat';
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -27,10 +27,8 @@ export default function Chat() {
   useEffect(() => {
     if (!roomId) return;
     
-    // Load history first
     loadHistory();
 
-    // Connect to WebSocket
     wsService.connect(
       () => {
         setConnected(true);
@@ -41,7 +39,7 @@ export default function Chat() {
       },
       (err) => {
         console.error('STOMP Error:', err);
-        setError('Connection failed. ' + err);
+        setError('Falha na conexão. ' + err);
         if (err === "No token found") {
             navigate('/');
         }
@@ -96,7 +94,7 @@ export default function Chat() {
         <div className="chat-title">
           <h2>{roomName}</h2>
           <span className={`status-indicator ${connected ? 'status-online' : 'status-offline'}`}>
-            {connected ? 'Connected' : 'Connecting...'}
+            {connected ? 'Conectado' : 'Conectando...'}
           </span>
         </div>
       </header>
@@ -105,13 +103,10 @@ export default function Chat() {
 
       <main className="messages-area">
         {messages.map((msg, index) => {
-           // We try to figure out if it's sent by me.
-           // Since we don't store "my username", let's assume if it is right aligned if needed,
-           // or just show cleanly. In this premium design, we show sender's name on top of the bubble.
            return (
             <div key={index} className="message-wrapper">
               <div className="message-bubble">
-                <div className="message-sender">{msg.senderUsername || 'Unknown User'}</div>
+                <div className="message-sender">{msg.senderUsername || 'Usuário Desconhecido'}</div>
                 <div className="message-content">{decodeHtml(msg.content)}</div>
                 <div className="message-time">
                   {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
@@ -129,7 +124,7 @@ export default function Chat() {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type a message..."
+            placeholder="Digite uma mensagem..."
             autoComplete="off"
             disabled={!connected}
           />

@@ -39,19 +39,15 @@ export default function Rooms() {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      // Fetch user profile
       const profRes = await api.get('/user/profile');
       setCurrentUser(profRes.data.user);
 
-      // Fetch public rooms
       const pubRes = await api.get('/rooms/public');
       setPublicRooms(pubRes.data);
 
-      // Fetch user's private rooms (DIRECT, GROUP)
       const myRes = await api.get('/rooms');
       setMyRooms(myRes.data);
 
-      // Pre-fetch all users for the modals
       const usersRes = await api.get('/user/all');
       setAllUsers(usersRes.data);
 
@@ -73,7 +69,7 @@ export default function Rooms() {
   const joinRoom = (room: Room) => {
     let displayName = room.name;
     if (room.type === 'DIRECT') {
-       displayName = "Direct Chat";
+       displayName = "Chat Direto";
        if (room.members && currentUser) {
            const otherMember = room.members.find((m: any) => m.userId !== currentUser.id && m.userId !== currentUser._id);
            if (otherMember && otherMember.username) displayName = otherMember.username;
@@ -89,12 +85,12 @@ export default function Rooms() {
       joinRoom(res.data);
     } catch (err) {
       console.error(err);
-      alert('Failed to create direct chat.');
+      alert('Falha ao criar chat direto.');
     }
   };
 
   const createGroupRoom = async () => {
-    if (!groupName || selectedUsers.length === 0) return alert('Provide a name and select at least 1 member');
+    if (!groupName || selectedUsers.length === 0) return alert('Forneça um nome e selecione pelo menos 1 membro');
     try {
       const res = await api.post('/rooms/group', { name: groupName, memberIds: selectedUsers });
       setGroupModalOpen(false);
@@ -103,7 +99,7 @@ export default function Rooms() {
       joinRoom(res.data);
     } catch (err) {
       console.error(err);
-      alert('Failed to create group chat.');
+      alert('Falha ao criar chat em grupo.');
     }
   };
 
@@ -122,34 +118,33 @@ export default function Rooms() {
         <div className="header-user" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {currentUser && (
             <span className="user-greeting" style={{ fontSize: '0.9rem' }}>
-              Hello, <strong>{currentUser.username}</strong>
+              Olá, <strong>{currentUser.username}</strong>
             </span>
           )}
-          <button className="btn-icon" onClick={handleLogout} title="Logout">
+          <button className="btn-icon" onClick={handleLogout} title="Sair">
             <LogOut size={20} />
           </button>
         </div>
       </header>
 
       <main className="rooms-main">
-        {/* PUBLIC ROOMS */}
         <div className="glass-panel rooms-panel">
           <div className="panel-header">
-            <h3>Public Rooms</h3>
+            <h3>Salas Públicas</h3>
           </div>
           
           <div className="rooms-list">
             {loading ? (
               <div className="loading-state"><span className="spinner"></span></div>
             ) : publicRooms.length === 0 ? (
-              <div className="empty-state">No public rooms.</div>
+              <div className="empty-state">Nenhuma sala pública.</div>
             ) : (
               publicRooms.map(room => (
                 <div key={room.id} className="room-card" onClick={() => joinRoom(room)}>
                   <div className="room-icon"><Hash size={24} /></div>
                   <div className="room-info">
                     <h4>{room.name}</h4>
-                    <span>Public Channel</span>
+                    <span>Canal Público</span>
                   </div>
                 </div>
               ))
@@ -157,11 +152,10 @@ export default function Rooms() {
           </div>
         </div>
 
-        {/* GROUP ROOMS */}
         <div className="glass-panel rooms-panel">
           <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>Groups</h3>
-            <button className="btn-icon-small" onClick={() => setGroupModalOpen(true)} title="New Group">
+            <h3>Grupos</h3>
+            <button className="btn-icon-small" onClick={() => setGroupModalOpen(true)} title="Novo Grupo">
               <Plus size={18} />
             </button>
           </div>
@@ -169,14 +163,14 @@ export default function Rooms() {
             {loading ? (
               <div className="loading-state"><span className="spinner"></span></div>
             ) : groupRooms.length === 0 ? (
-              <div className="empty-state">No group chats yet.</div>
+              <div className="empty-state">Nenhum grupo ainda.</div>
             ) : (
               groupRooms.map(room => (
                 <div key={room.id} className="room-card" onClick={() => joinRoom(room)}>
                   <div className="room-icon"><Users size={24} /></div>
                   <div className="room-info">
                     <h4>{room.name}</h4>
-                    <span>Group Chat</span>
+                    <span>Chat em Grupo</span>
                   </div>
                 </div>
               ))
@@ -184,11 +178,10 @@ export default function Rooms() {
           </div>
         </div>
 
-        {/* DIRECT MESSAGES */}
         <div className="glass-panel rooms-panel">
           <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3>Direct Messages</h3>
-            <button className="btn-icon-small" onClick={() => setDirectModalOpen(true)} title="New DM">
+            <h3>Mensagens Diretas</h3>
+            <button className="btn-icon-small" onClick={() => setDirectModalOpen(true)} title="Nova Mensagem Direta">
               <Plus size={18} />
             </button>
           </div>
@@ -196,10 +189,10 @@ export default function Rooms() {
             {loading ? (
               <div className="loading-state"><span className="spinner"></span></div>
             ) : directRooms.length === 0 ? (
-              <div className="empty-state">No private chats yet.</div>
+              <div className="empty-state">Nenhum chat privado ainda.</div>
             ) : (
               directRooms.map(room => {
-                 let otherName = "Direct Chat";
+                 let otherName = "Chat Direto";
                  if (room.members && currentUser) {
                      const m = room.members.find((mx: any) => mx.userId !== currentUser.id && mx.userId !== currentUser._id);
                      if (m && m.username) otherName = m.username;
@@ -209,7 +202,7 @@ export default function Rooms() {
                     <div className="room-icon"><UserIcon size={24} /></div>
                     <div className="room-info">
                       <h4>{otherName}</h4>
-                      <span>Private Chat</span>
+                      <span>Chat Privado</span>
                     </div>
                   </div>
                 )
@@ -219,12 +212,11 @@ export default function Rooms() {
         </div>
       </main>
 
-      {/* MODALS */}
       {isDirectModalOpen && (
         <div className="modal-backdrop" onClick={() => setDirectModalOpen(false)}>
           <div className="glass-panel modal-content" onClick={e => e.stopPropagation()}>
-            <h3 style={{marginBottom: '0.5rem'}}>New Direct Message</h3>
-            <p style={{marginBottom: '1rem', color: 'var(--text-muted)'}}>Select a user to start chatting</p>
+            <h3 style={{marginBottom: '0.5rem'}}>Nova Mensagem Direta</h3>
+            <p style={{marginBottom: '1rem', color: 'var(--text-muted)'}}>Selecione um usuário para conversar</p>
             <div className="user-list">
               {otherUsers.map(u => (
                 <div key={u._id} className="user-card" onClick={() => createDirectRoom(u._id!)}>
@@ -234,7 +226,7 @@ export default function Rooms() {
               ))}
             </div>
             <div style={{marginTop: '1rem', display: 'flex', justifyContent: 'flex-end'}}>
-              <button className="btn-secondary" onClick={() => setDirectModalOpen(false)}>Cancel</button>
+              <button className="btn-secondary" onClick={() => setDirectModalOpen(false)}>Cancelar</button>
             </div>
           </div>
         </div>
@@ -243,12 +235,12 @@ export default function Rooms() {
       {isGroupModalOpen && (
         <div className="modal-backdrop" onClick={() => setGroupModalOpen(false)}>
           <div className="glass-panel modal-content" onClick={e => e.stopPropagation()}>
-            <h3 style={{marginBottom: '1rem'}}>New Group Chat</h3>
+            <h3 style={{marginBottom: '1rem'}}>Novo Chat em Grupo</h3>
             <div className="input-group">
-              <label>Group Name</label>
-              <input type="text" value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="E.g. Engineering Team" />
+              <label>Nome do Grupo</label>
+              <input type="text" value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="Ex. Equipe de Engenharia" />
             </div>
-            <p style={{margin: '0.5rem 0', color: 'var(--text-muted)'}}>Select members:</p>
+            <p style={{margin: '0.5rem 0', color: 'var(--text-muted)'}}>Selecionar membros:</p>
             <div className="user-list">
               {otherUsers.map(u => {
                 const isSelected = selectedUsers.includes(u._id!);
@@ -262,8 +254,8 @@ export default function Rooms() {
               })}
             </div>
             <div className="modal-actions" style={{display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem'}}>
-              <button className="btn-secondary" onClick={() => setGroupModalOpen(false)}>Cancel</button>
-              <button className="btn-primary" style={{width: 'auto'}} onClick={createGroupRoom}>Create Group</button>
+              <button className="btn-secondary" onClick={() => setGroupModalOpen(false)}>Cancelar</button>
+              <button className="btn-primary" style={{width: 'auto'}} onClick={createGroupRoom}>Criar Grupo</button>
             </div>
           </div>
         </div>
