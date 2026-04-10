@@ -58,7 +58,7 @@ class WebSocketService {
       } catch (err) {
         onMessageReceived(message.body);
       }
-    }, { type: 'PUBLIC' }); // Note: the type PUBLIC was used in the vanilla JS, kept for compatibility
+    }, { type: 'PUBLIC' });
   }
 
   sendMessage(roomId: string, content: string) {
