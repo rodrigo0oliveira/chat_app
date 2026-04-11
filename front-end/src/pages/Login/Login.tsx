@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api';
+import { api } from '../../services/api';
 import { MessageSquare, LogIn, UserPlus } from 'lucide-react';
+import './Login.css';
+import { tokenService } from '../../services/token';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -20,7 +22,7 @@ export default function Login() {
     try {
       if (isLogin) {
         const res = await api.post('/auth/login', { email, password });
-        localStorage.setItem('chat_token', res.data.token || res.data);
+        tokenService.setChatToken(res.data.token || res.data);
         navigate('/rooms');
       } else {
         await api.post('/auth/register', { username, email, password });

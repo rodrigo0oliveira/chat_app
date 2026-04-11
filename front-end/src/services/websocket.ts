@@ -1,11 +1,12 @@
 import { Client } from '@stomp/stompjs';
+import { tokenService } from './token';
 
 class WebSocketService {
   private client: Client | null = null;
   private currentSubscription: any = null;
 
   connect(onConnect: () => void, onError: (err: any) => void) {
-    const token = localStorage.getItem('chat_token');
+    const token = tokenService.getChatToken();
     if (!token) {
       onError("No token found");
       return;
@@ -16,7 +17,6 @@ class WebSocketService {
       connectHeaders: {
         authorization: token,
       },
-      debug: (str) => console.log('[STOMP]', str),
       reconnectDelay: 0,
       heartbeatIncoming: 0,
       heartbeatOutgoing: 0,

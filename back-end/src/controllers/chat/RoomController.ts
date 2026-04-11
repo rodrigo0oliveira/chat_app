@@ -14,6 +14,28 @@ export class RoomController {
     }
   }
 
+  static async getUserDirectRooms(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).userId;
+      const rooms = await RoomService.getUserRooms(userId, 'DIRECT');
+      res.status(200).json(rooms);
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async getUserGroupRooms(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).userId;
+      const rooms = await RoomService.getUserRooms(userId, 'GROUP');
+      res.status(200).json(rooms);
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
   static async createDirectRoom(req: Request, res: Response): Promise<void> {
     try {
       const userId = (req as any).userId;

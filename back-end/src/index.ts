@@ -40,15 +40,12 @@ const startServer = async (): Promise<void> => {
 
   await mongoose.connect(mongoUri);
   const server = app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
   });
 
   const wss = new WebSocketServer({ server });
-  
+
   wss.on('connection', (ws) => {
     const connectionId = uuidv4();
-    console.log(`[WS] New connection established: ${connectionId}`);
-    // Hand over control to StompHandler
     new StompHandler(ws, connectionId);
   });
 };

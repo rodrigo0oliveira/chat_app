@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { wsService } from '../services/websocket';
-import { api } from '../services/api';
+import './Chat.css';
+import { wsService } from '../../services/websocket';
+import { api } from '../../services/api';
 import { ArrowLeft, Send } from 'lucide-react';
+import { tokenService } from '../../services/token';
 
 interface ChatMessage {
   id?: string;
+  senderId?: string;
   content: string;
   senderUsername: string;
   createdAt: string;
@@ -15,18 +18,20 @@ export default function Chat() {
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
   const roomName = searchParams.get('name') || 'Sala de Chat';
-  
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState('');
-  
+
+  const currentUserId = tokenService.getUserIdFromToken();
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!roomId) return;
-    
+
     loadHistory();
 
     wsService.connect(
@@ -41,7 +46,7 @@ export default function Chat() {
         console.error('STOMP Error:', err);
         setError('Falha na conexão. ' + err);
         if (err === "No token found") {
-            navigate('/');
+          navigate('/');
         }
       }
     );
@@ -62,7 +67,7 @@ export default function Chat() {
     } catch (err: any) {
       console.error('Failed to load history', err);
       if (err.response?.status === 401 || err.response?.status === 403) {
-          navigate('/');
+        navigate('/');
       }
     }
   };
@@ -103,13 +108,14 @@ export default function Chat() {
 
       <main className="messages-area">
         {messages.map((msg, index) => {
-           return (
-            <div key={index} className="message-wrapper">
-              <div className="message-bubble">
-                <div className="message-sender">{msg.senderUsername || 'Usuário Desconhecido'}</div>
+          const isMine = msg.senderId === currentUserId;
+          return (
+            <div key={index} className={`message-wrapper ${isMine ? 'mine' : 'other'}`}>
+              <div className={`message-bubble ${isMine ? 'bubble-mine' : 'bubble-other'}`}>
+                <div className="message-sender">{msg.senderUsername || (isMine ? 'Você' : 'Alguém')}</div>
                 <div className="message-content">{decodeHtml(msg.content)}</div>
                 <div className="message-time">
-                  {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                  {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                 </div>
               </div>
             </div>

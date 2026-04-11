@@ -83,7 +83,6 @@ export class StompHandler {
     
     // Auth logic via STOMP headers (e.g. login/passcode or authorization header)
     const token = headers['passcode'] || headers['authorization']
-    console.log("Extracted token from headers:", token);
 
     if (!token) {
       throw new Error('Authentication token required');
@@ -100,7 +99,6 @@ export class StompHandler {
       this.isAuthenticated = true;
 
       this.ws.send(StompParser.createConnectedFrame('1.2'));
-      console.log(`[STOMP] Connection ${this.connectionId} authenticated as User ${this.userId}`);
 
     } catch (error) {
        this.sendError('Authentication failed', 'Invalid JWT token');
@@ -139,7 +137,6 @@ export class StompHandler {
         });
 
         this.subscriptions.set(id, destination);
-        console.log(`[STOMP User ${this.userId}] subscribed to ${destination} (SubID: ${id})`);
 
         if (headers['receipt']) {
             this.ws.send(StompParser.createReceiptFrame(headers['receipt']));
@@ -157,7 +154,6 @@ export class StompHandler {
      if (destination) {
          inMemoryBroker.unsubscribe(destination, this.connectionId);
          this.subscriptions.delete(id);
-         console.log(`[STOMP User ${this.userId}] unsubscribed from ${destination}`);
      }
 
      if (frame.headers['receipt']) {
@@ -210,7 +206,6 @@ export class StompHandler {
          this.ws.send(StompParser.createReceiptFrame(receipt));
       }
       
-      console.log(`[STOMP] Connection ${this.connectionId} disconnected`);
       if (this.ws.readyState === WebSocket.OPEN) {
         this.ws.close();
       }

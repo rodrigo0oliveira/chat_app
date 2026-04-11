@@ -1,20 +1,16 @@
 import mongoose from 'mongoose';
 import Message from '../../models/Message.js';
-import RoomMember from '../../models/RoomMember.js';
 import type { CreateMessageDto, MessageResponseDto } from '../../dtos/chat.dto.js';
 import { v4 as uuidv4 } from 'uuid';
 import { inMemoryBroker } from '../../websocket/broker/InMemoryBroker.js';
 
 export class MessageService {
-  /**
-   * Saves a message idempotently and publishes it to the broker.
-   */
   static async saveAndPublishMessage(
-    senderId: string, 
-    dto: CreateMessageDto, 
+    senderId: string,
+    dto: CreateMessageDto,
     clientMessageId?: string
   ): Promise<MessageResponseDto> {
-    
+
     const messageId = clientMessageId || uuidv4();
 
     let message;
@@ -26,7 +22,6 @@ export class MessageService {
         senderId,
       });
     } catch (error: any) {
-      // Handle idempotency (if a message with the same messageId was already processed)
       if (error.code === 11000) {
         message = await Message.findOne({ messageId });
       } else {
@@ -38,28 +33,27 @@ export class MessageService {
       throw new Error('Failed to save message.');
     }
 
+    await message.populate('senderId');
+    const sender = message.senderId as any;
+
     const responseDto: MessageResponseDto = {
       id: message._id.toString(),
       messageId: message.messageId,
       roomId: message.roomId.toString(),
-      senderId: message.senderId.toString(),
-      senderUsername: '',
+      senderId: sender._id.toString(),
+      senderUsername: sender.username || '',
       content: message.content,
       createdAt: message.createdAt,
     };
 
-    // Publish to broker topic: /topic/rooms.{roomId}
     inMemoryBroker.publish(`/topic/rooms.${dto.roomId}`, JSON.stringify(responseDto));
 
     return responseDto;
   }
 
-  /**
-   * Fetches paginated history for a room.
-   */
   static async getRoomMessages(roomId: string, limit: number = 50, beforeTimestamp?: Date): Promise<MessageResponseDto[]> {
     const query: any = { roomId };
-    
+
     if (beforeTimestamp) {
       query.createdAt = { $lt: beforeTimestamp };
     }

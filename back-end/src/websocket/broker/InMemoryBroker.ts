@@ -11,7 +11,6 @@ export class InMemoryBroker implements MessageBroker {
       this.topics.set(destination, new Map());
     }
     this.topics.get(destination)!.set(connectionId, callback);
-    console.log(`[Broker] Connection ${connectionId} subscribed to ${destination}`);
   }
 
   unsubscribe(destination: string, connectionId: string): void {
@@ -22,7 +21,6 @@ export class InMemoryBroker implements MessageBroker {
       if (topicSubscribers.size === 0) {
         this.topics.delete(destination);
       }
-      console.log(`[Broker] Connection ${connectionId} unsubscribed from ${destination}`);
     }
   }
 
@@ -35,13 +33,11 @@ export class InMemoryBroker implements MessageBroker {
         }
       }
     }
-    console.log(`[Broker] Connection ${connectionId} unsubscribed from all topics`);
   }
 
   publish(destination: string, message: string): void {
     if (this.topics.has(destination)) {
       const subscribers = this.topics.get(destination)!;
-      console.log(`[Broker] Publishing to ${destination} (${subscribers.size} subscribers)`);
       for (const callback of subscribers.values()) {
         try {
           callback(message);
@@ -50,7 +46,6 @@ export class InMemoryBroker implements MessageBroker {
         }
       }
     } else {
-      console.log(`[Broker] No subscribers for destination ${destination}`);
     }
   }
 }

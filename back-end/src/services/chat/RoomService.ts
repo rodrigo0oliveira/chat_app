@@ -5,9 +5,7 @@ import User from '../../models/User.js';
 import type { CreateGroupRoomDto, RoomResponseDto } from '../../dtos/chat.dto.js';
 
 export class RoomService {
-  /**
-   * Retrieves or creates a DIRECT room between two users atomically.
-   */
+
   static async getOrCreateDirectRoom(userId: string, targetUserId: string): Promise<RoomResponseDto> {
     if (userId === targetUserId) {
       throw new Error('Cannot create a direct room with yourself.');
@@ -18,7 +16,6 @@ export class RoomService {
       throw new Error('Target user not found.');
     }
 
-    // Create deterministic ID for concurrency control
     const sortedIds = [userId, targetUserId].sort();
     const directChatId = `${sortedIds[0]}_${sortedIds[1]}`;
 
@@ -53,9 +50,6 @@ export class RoomService {
     return RoomService.getRoomDetails(room._id.toString());
   }
 
-  /**
-   * Creates a GROUP room with the given members.
-   */
   static async createGroupRoom(userId: string, dto: CreateGroupRoomDto): Promise<RoomResponseDto> {
     const room = await Room.create({
       type: 'GROUP',
@@ -68,17 +62,13 @@ export class RoomService {
       ...dto.memberIds.map(memId => ({ roomId: room._id, userId: memId, role: 'MEMBER' }))
     ];
 
-    // Optional: filter out duplicates if user included themselves in memberIds
     const uniqueMembers = Array.from(new Map(members.map(m => [m.userId.toString(), m])).values());
 
     await RoomMember.insertMany(uniqueMembers);
-    
+
     return RoomService.getRoomDetails(room._id.toString());
   }
 
-  /**
-   * Helper to fetch full room details for response.
-   */
   static async getRoomDetails(roomId: string): Promise<RoomResponseDto> {
     const room = await Room.findById(roomId).lean();
     if (!room) {
@@ -101,17 +91,17 @@ export class RoomService {
     };
   }
 
-  /**
-   * Gets all rooms the user belongs to.
-   */
-  static async getUserRooms(userId: string): Promise<RoomResponseDto[]> {
+  static async getUserRooms(userId: string, type?: 'DIRECT' | 'GROUP'): Promise<RoomResponseDto[]> {
     const members = await RoomMember.find({ userId }).lean();
     const roomIds = members.map(m => m.roomId);
 
-    const rooms = await Room.find({ _id: { $in: roomIds } }).sort({ createdAt: -1 }).lean();
-    
-    // For a real app, you might want to fetch all members for each room in bulk
-    // to avoid N+1 queries. We'll do a simple iteration for now since it's an MVP.
+    const query: any = { _id: { $in: roomIds } };
+    if (type) {
+      query.type = type;
+    }
+
+    const rooms = await Room.find(query).sort({ createdAt: -1 }).lean();
+
     const responseRooms: RoomResponseDto[] = [];
     for (const room of rooms) {
       responseRooms.push(await RoomService.getRoomDetails(room._id.toString()));
@@ -129,7 +119,7 @@ export class RoomService {
       type: room.type,
       createdBy: room.createdBy ? room.createdBy.toString() : "",
       createdAt: room.createdAt,
-      members: [] 
+      members: []
     }))
   }
 }
