@@ -3,7 +3,6 @@ import type { MessageBroker } from './MessageBroker.js';
 type SubscriberCallback = (message: string) => void;
 
 export class InMemoryBroker implements MessageBroker {
-  // Map<destination, Map<connectionId, callback>>
   private topics: Map<string, Map<string, SubscriberCallback>> = new Map();
 
   subscribe(destination: string, connectionId: string, callback: SubscriberCallback): void {
@@ -17,7 +16,7 @@ export class InMemoryBroker implements MessageBroker {
     if (this.topics.has(destination)) {
       const topicSubscribers = this.topics.get(destination)!;
       topicSubscribers.delete(connectionId);
-      
+
       if (topicSubscribers.size === 0) {
         this.topics.delete(destination);
       }
@@ -50,5 +49,4 @@ export class InMemoryBroker implements MessageBroker {
   }
 }
 
-// Singleton instance for the current application scope
 export const inMemoryBroker = new InMemoryBroker();

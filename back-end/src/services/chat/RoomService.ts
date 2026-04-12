@@ -34,7 +34,6 @@ export class RoomService {
           { roomId: room._id, userId: targetUserId, role: 'MEMBER' }
         ]);
       } catch (error: any) {
-        // 11000 is MongoDB's duplicate key error code
         if (error.code === 11000) {
           room = await Room.findOne({ directChatId });
         } else {

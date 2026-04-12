@@ -10,7 +10,6 @@ export class StompHandler {
   private connectionId: string;
   private isAuthenticated: boolean = false;
   private userId: string | null = null;
-  // Map<subscriptionId, destination>
   private subscriptions: Map<string, string> = new Map();
 
   constructor(ws: WebSocket, connectionId: string) {
@@ -25,8 +24,7 @@ export class StompHandler {
   private async handleRawMessage(data: any): Promise<void> {
     try {
       const rawMessage = data.toString('utf8');
-      
-      // Heartbeat checks (just newline chars)
+
       if (rawMessage === '\n' || rawMessage === '\r\n') {
         return;
       }
@@ -80,8 +78,7 @@ export class StompHandler {
 
   private async handleConnect(frame: StompFrame): Promise<void> {
     const { headers } = frame;
-    
-    // Auth logic via STOMP headers (e.g. login/passcode or authorization header)
+
     const token = headers['passcode'] || headers['authorization']
 
     if (!token) {
@@ -90,7 +87,7 @@ export class StompHandler {
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-        throw new Error('Server configuration error (JWT_SECRET miss)');
+      throw new Error('Server configuration error (JWT_SECRET miss)');
     }
 
     try {
@@ -101,120 +98,113 @@ export class StompHandler {
       this.ws.send(StompParser.createConnectedFrame('1.2'));
 
     } catch (error) {
-       this.sendError('Authentication failed', 'Invalid JWT token');
-       this.ws.close();
+      this.sendError('Authentication failed', 'Invalid JWT token');
+      this.ws.close();
     }
   }
 
   private async handleSubscribe(frame: StompFrame): Promise<void> {
     const { headers } = frame;
     const destination = headers['destination'];
-    const id = headers['id']; 
-    const type = headers['type'] || 'PRIVATE'; 
+    const id = headers['id'];
+    const type = headers['type'] || 'PRIVATE';
 
-    if (!destination || !id) { 
+    if (!destination || !id) {
       throw new Error('SUBSCRIBE requires destination and id headers');
     }
 
-    // Logic for /topic/rooms.{roomId}
     if (destination.startsWith('/topic/rooms.')) {
-        const roomId = destination.split('.')[1];
-        
-        
-        // Authorize: ensure user is part of the room
-        const isMember = await RoomMember.exists({ userId: this.userId, roomId });
-        if (!isMember && type !== 'PUBLIC') {
-          throw new Error('Unauthorized: You are not a member of this room');
+      const roomId = destination.split('.')[1];
+
+      const isMember = await RoomMember.exists({ userId: this.userId, roomId });
+      if (!isMember && type !== 'PUBLIC') {
+        throw new Error('Unauthorized: You are not a member of this room');
+      }
+
+      inMemoryBroker.subscribe(destination, this.connectionId, (message) => {
+        const frameToSend = StompParser.createMessageFrame(destination, id, `msg-${Date.now()}`, message);
+        if (this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(frameToSend);
         }
+      });
 
-        // Add to broker
-        inMemoryBroker.subscribe(destination, this.connectionId, (message) => {
-           // Provide a unique message-id per broadcast from the broker
-           const frameToSend = StompParser.createMessageFrame(destination, id, `msg-${Date.now()}`, message);
-           if (this.ws.readyState === WebSocket.OPEN) {
-             this.ws.send(frameToSend);
-           }
-        });
+      this.subscriptions.set(id, destination);
 
-        this.subscriptions.set(id, destination);
-
-        if (headers['receipt']) {
-            this.ws.send(StompParser.createReceiptFrame(headers['receipt']));
-        }
+      if (headers['receipt']) {
+        this.ws.send(StompParser.createReceiptFrame(headers['receipt']));
+      }
     } else {
-       throw new Error(`Destination ${destination} is not supported`);
+      throw new Error(`Destination ${destination} is not supported`);
     }
   }
 
   private handleUnsubscribe(frame: StompFrame): void {
-     const id = frame.headers['id'];
-     if (!id) throw new Error('UNSUBSCRIBE requires id header');
+    const id = frame.headers['id'];
+    if (!id) throw new Error('UNSUBSCRIBE requires id header');
 
-     const destination = this.subscriptions.get(id);
-     if (destination) {
-         inMemoryBroker.unsubscribe(destination, this.connectionId);
-         this.subscriptions.delete(id);
-     }
+    const destination = this.subscriptions.get(id);
+    if (destination) {
+      inMemoryBroker.unsubscribe(destination, this.connectionId);
+      this.subscriptions.delete(id);
+    }
 
-     if (frame.headers['receipt']) {
-        this.ws.send(StompParser.createReceiptFrame(frame.headers['receipt']));
-     }
+    if (frame.headers['receipt']) {
+      this.ws.send(StompParser.createReceiptFrame(frame.headers['receipt']));
+    }
   }
 
   private async handleSend(frame: StompFrame): Promise<void> {
-      const { headers, body } = frame;
-      const destination = headers['destination'];
+    const { headers, body } = frame;
+    const destination = headers['destination'];
 
-      if (!destination) {
-          throw new Error('SEND requires destination header');
+    if (!destination) {
+      throw new Error('SEND requires destination header');
+    }
+
+    if (destination === '/app/chat.sendMessage') {
+      const dto = JSON.parse(body);
+
+      if (!dto.roomId || !dto.content) {
+        throw new Error('Message body requires roomId and content');
       }
 
-      if (destination === '/app/chat.sendMessage') {
-          // Parse request body. Expected `{ "roomId": "...", "content": "..." }`
-          const dto = JSON.parse(body);
-          
-          if (!dto.roomId || !dto.content) {
-            throw new Error('Message body requires roomId and content');
-          }
+      const clientMessageId = headers['message-id'];
 
-          const clientMessageId = headers['message-id']; // Optional idempotent key from client
-
-          if (!this.userId) {
-             throw new Error("Internal state error: userId not present");
-          }
-
-          // MessageService will validate membership, store to Mongo, and publish to the broker
-          await MessageService.saveAndPublishMessage(this.userId, {
-            roomId: dto.roomId,
-            content: dto.content
-          }, clientMessageId);
-
-          if (headers['receipt']) {
-              this.ws.send(StompParser.createReceiptFrame(headers['receipt']));
-          }
-
-      } else {
-          throw new Error(`Destination ${destination} not supported for SEND`);
+      if (!this.userId) {
+        throw new Error("Internal state error: userId not present");
       }
+
+      await MessageService.saveAndPublishMessage(this.userId, {
+        roomId: dto.roomId,
+        content: dto.content
+      }, clientMessageId);
+
+      if (headers['receipt']) {
+        this.ws.send(StompParser.createReceiptFrame(headers['receipt']));
+      }
+
+    } else {
+      throw new Error(`Destination ${destination} not supported for SEND`);
+    }
   }
 
   private handleDisconnect(receipt?: string): void {
-      inMemoryBroker.unsubscribeAll(this.connectionId);
-      this.subscriptions.clear();
+    inMemoryBroker.unsubscribeAll(this.connectionId);
+    this.subscriptions.clear();
 
-      if (receipt && this.ws.readyState === WebSocket.OPEN) {
-         this.ws.send(StompParser.createReceiptFrame(receipt));
-      }
-      
-      if (this.ws.readyState === WebSocket.OPEN) {
-        this.ws.close();
-      }
+    if (receipt && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(StompParser.createReceiptFrame(receipt));
+    }
+
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.close();
+    }
   }
 
   private sendError(message: string, details: string): void {
-       if (this.ws.readyState === WebSocket.OPEN) {
-          const errorFrame = StompParser.createErrorFrame(message, details);
-          this.ws.send(errorFrame);
-       }
+    if (this.ws.readyState === WebSocket.OPEN) {
+      const errorFrame = StompParser.createErrorFrame(message, details);
+      this.ws.send(errorFrame);
+    }
   }
 }

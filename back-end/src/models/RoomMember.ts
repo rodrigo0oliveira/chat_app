@@ -35,7 +35,6 @@ const RoomMemberSchema = new Schema<IRoomMember>(
 
 RoomMemberSchema.index({ userId: 1 });
 RoomMemberSchema.index({ roomId: 1 });
-// Constraint única composta garantindo UNIQUE(userId, roomId)
 RoomMemberSchema.index({ userId: 1, roomId: 1 }, { unique: true });
 
 const RoomMember = mongoose.model<IRoomMember>('RoomMember', RoomMemberSchema);

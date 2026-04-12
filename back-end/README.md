@@ -50,8 +50,7 @@ Cliente                      Servidor
 No Node.js usamos a biblioteca `ws`:
 
 ```ts
-// src/index.ts
-const wss = new WebSocketServer({ server }); // mesmo servidor HTTP
+const wss = new WebSocketServer({ server }); 
 wss.on('connection', (ws) => {
   new StompHandler(ws, connectionId);
 });

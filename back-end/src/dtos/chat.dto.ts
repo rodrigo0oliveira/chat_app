@@ -1,10 +1,10 @@
 export interface CreateDirectRoomDto {
-  targetUserId: string; // The user ID of the person to chat with
+  targetUserId: string;
 }
 
 export interface CreateGroupRoomDto {
   name: string;
-  memberIds: string[]; // List of user IDs to add initially
+  memberIds: string[];
 }
 
 export type CreateRoomDto = CreateDirectRoomDto | CreateGroupRoomDto;

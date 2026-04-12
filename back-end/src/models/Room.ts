@@ -20,7 +20,7 @@ const RoomSchema = new Schema<IRoom>(
     },
     type: {
       type: String,
-      enum: ['DIRECT', 'GROUP','PUBLIC'],
+      enum: ['DIRECT', 'GROUP', 'PUBLIC'],
       required: true,
     },
     directChatId: {
@@ -43,7 +43,6 @@ const RoomSchema = new Schema<IRoom>(
   }
 );
 
-// Virtual property to represent relationships: Room -> possui vários Messages
 RoomSchema.virtual('messages', {
   ref: 'Message',
   localField: '_id',

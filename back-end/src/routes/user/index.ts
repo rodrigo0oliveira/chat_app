@@ -14,7 +14,6 @@ interface AuthRequest extends Request {
 
 const router = Router();
 
-// Protect all user routes
 router.use(authenticateToken);
 
 router.get('/profile', (req: AuthRequest, res: Response) => {
