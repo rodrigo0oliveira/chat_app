@@ -21,7 +21,6 @@ Aplicação de chat em tempo real desenvolvida como projeto acadêmico para a di
 |---|---|
 | Raffael Queiroga | [@queirogaraffael](https://github.com/queirogaraffael) |
 | Rodrigo Oliveira | [@rodrigo0oliveira](https://github.com/rodrigo0oliveira) |
-| Amanda Lanay | — |
 
 ---
 
