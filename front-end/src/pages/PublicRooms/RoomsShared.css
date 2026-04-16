@@ -226,3 +226,32 @@
   border-color: transparent;
   transform: scale(1.1);
 }
+
+@media (max-width: 768px) {
+  .rooms-main {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .panel-header {
+    padding: 1.25rem;
+  }
+  
+  .search-bar {
+    width: 100%;
+  }
+
+  .room-card {
+    padding: 1rem;
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+  }
+
+  .rooms-panel {
+    max-height: calc(100vh - 120px);
+  }
+}
