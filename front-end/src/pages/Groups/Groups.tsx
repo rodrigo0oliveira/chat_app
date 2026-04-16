@@ -19,8 +19,7 @@ interface Room {
 export default function Groups() {
   const [groupRooms, setGroupRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  
+
   const [isGroupModalOpen, setGroupModalOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -37,7 +36,7 @@ export default function Groups() {
       setLoading(true);
       const profRes = await api.get('/user/profile');
       const user = profRes.data.user;
-      setCurrentUser(user);
+
 
       const rolesRes = await api.get('/rooms/group');
       setGroupRooms(rolesRes.data);

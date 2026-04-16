@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { MessageSquare, LogOut, Hash, Users, User as UserIcon } from 'lucide-react';
 import { api } from '../../services/api';
